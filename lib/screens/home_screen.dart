@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
+import 'wellness_tips_screen.dart';
 import '../models/habit.dart';
 import '../widgets/habit_card.dart';
 import 'detail_screen.dart';
@@ -71,6 +71,20 @@ class HomeScreen extends StatelessWidget {
             icon: const Icon(Icons.logout),
             onPressed: () => _logout(context),
           ),
+
+          IconButton(
+            tooltip: 'Weather & Wellness',
+            icon: const Icon(Icons.cloud_outlined),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const WellnessTipsScreen(),
+                ),
+              );
+            },
+          ),
+
         ],
       ),
 
