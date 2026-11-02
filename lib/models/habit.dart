@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Habit {
   final String id;
@@ -73,7 +74,9 @@ class HabitStore extends ChangeNotifier {
   ];
 
   int get completedCount =>
-      habits.where((habit) => habit.isCompleted).length;
+      habits
+          .where((habit) => habit.isCompleted)
+          .length;
 
   double get progress =>
       habits.isEmpty ? 0 : completedCount / habits.length;
@@ -81,13 +84,69 @@ class HabitStore extends ChangeNotifier {
   List<Habit> get favorites =>
       habits.where((habit) => habit.isFavorite).toList();
 
-  void toggleCompleted(Habit habit) {
-    habit.isCompleted = !habit.isCompleted;
+  // Load saved data when the app starts.
+
+  Future<void> loadHabits() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    for (final habit in habits) {
+      habit.isCompleted =
+          prefs.getBool('completed_${habit.id}') ?? false;
+
+      habit.isFavorite =
+          prefs.getBool('favorite_${habit.id}') ?? false;
+
+      debugPrint(
+        'LOADED ${habit.id}: '
+            'completed=${habit.isCompleted}, '
+            'favorite=${habit.isFavorite}',
+      );
+    }
+
     notifyListeners();
   }
 
-  void toggleFavorite(Habit habit) {
-    habit.isFavorite = !habit.isFavorite;
-    notifyListeners();
+  Future<void> toggleCompleted(Habit habit) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final newValue = !habit.isCompleted;
+
+    final success = await prefs.setBool(
+      'completed_${habit.id}',
+      newValue,
+    );
+
+    if (success) {
+      habit.isCompleted = newValue;
+      notifyListeners();
+
+      debugPrint(
+        'SAVED completed_${habit.id} = $newValue',
+      );
+    } else {
+      debugPrint('FAILED to save completed_${habit.id}');
+    }
+  }
+
+  Future<void> toggleFavorite(Habit habit) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final newValue = !habit.isFavorite;
+
+    final success = await prefs.setBool(
+      'favorite_${habit.id}',
+      newValue,
+    );
+
+    if (success) {
+      habit.isFavorite = newValue;
+      notifyListeners();
+
+      debugPrint(
+        'SAVED favorite_${habit.id} = $newValue',
+      );
+    } else {
+      debugPrint('FAILED to save favorite_${habit.id}');
+    }
   }
 }
